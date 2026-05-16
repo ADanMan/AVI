@@ -22,7 +22,7 @@ httpx==0.26.0
 tenacity==8.2.3
 
 # Vector Databases
-chromadb==0.4.22
+chromadb==1.5.9
 qdrant-client==1.7.3
 
 # Machine Learning (CPU version for smaller image)
