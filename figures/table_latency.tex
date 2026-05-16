@@ -1,0 +1,17 @@
+\begin{table}[H]
+\caption{Response Latency by Query Type. Governed system reports separately for
+blocked queries (early termination) and allowed queries (full generation).
+\label{tab:latency}}
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Query Type} & \textbf{Mean (s)} & \textbf{Median (s)} & \textbf{P95 (s)} & \textbf{N} \\
+\midrule
+Baseline (unfiltered) & 0.02 & 0.01 & 0.06 & 750 \\
+AVI — Blocked (early break) & 9.31 & 0.01 & 34.75 & 750 \\
+AVI — Allowed (full generation) & nan & nan & nan & 0 \\
+AVI — All queries & 9.31 & 0.01 & 34.75 & 750 \\
+\midrule
+\multicolumn{5}{l}{\textit{Latency reduction for blocked queries vs. baseline: -44460.6\% (conditional on early termination).}} \\
+\bottomrule
+\end{tabular}
+\end{table}

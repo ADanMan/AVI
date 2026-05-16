@@ -1,0 +1,74 @@
+# Codecov Configuration for AVI Project
+
+coverage:
+  precision: 2
+  round: down
+  range: "70...100"
+
+  status:
+    project:
+      default:
+        target: 70%
+        threshold: 5%
+        if_no_uploads: error
+        if_not_found: success
+        if_ci_failed: error
+
+    patch:
+      default:
+        target: 70%
+        threshold: 10%
+        if_no_uploads: error
+        if_not_found: success
+        if_ci_failed: error
+
+comment:
+  layout: "reach,diff,flags,tree,reach"
+  behavior: default
+  require_changes: false
+  require_base: no
+  require_head: yes
+
+github_checks:
+  annotations: true
+
+ignore:
+  - "tests/**/*"
+  - "**/__pycache__/**/*"
+  - "**/node_modules/**/*"
+  - "ui/dist/**/*"
+  - "ui/build/**/*"
+  - "**/migrations/**/*"
+  - "scripts/**/*"
+  - "examples/**/*"
+  - "notebooks/**/*"
+  - "docs/**/*"
+
+flags:
+  unittests:
+    paths:
+      - src/
+    carryforward: true
+
+  uitests:
+    paths:
+      - ui/src/
+    carryforward: true
+
+component_management:
+  default_rules:
+    statuses:
+      - type: project
+        target: 70%
+
+  individual_components:
+    - component_id: backend
+      name: Backend
+      paths:
+        - src/**/*.py
+
+    - component_id: frontend
+      name: Frontend
+      paths:
+        - ui/src/**/*.ts
+        - ui/src/**/*.tsx

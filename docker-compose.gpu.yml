@@ -1,0 +1,63 @@
+# Docker Compose GPU Override
+# Usage: docker compose -f docker-compose.yml -f docker-compose.gpu.yml up
+#
+# This file overrides the default CPU configuration to enable GPU acceleration
+# for embedding and reranking models. Requires NVIDIA Docker runtime.
+#
+# Prerequisites:
+# - NVIDIA GPU with CUDA support
+# - NVIDIA Container Toolkit installed
+# - Docker with GPU support configured
+#
+# Quick start:
+#   docker compose -f docker-compose.yml -f docker-compose.gpu.yml up --build
+
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: gpu  # Use GPU stage instead of CPU
+    image: avi-api:gpu
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1  # Use 1 GPU
+              capabilities: [gpu]
+    environment:
+      # GPU configuration - these will override .env settings
+      - DEVICE=cuda
+      - EMBEDDING_DEVICE=cuda
+      - RERANK_DEVICE=cuda
+    # GPU-specific runtime configuration
+    runtime: nvidia  # Legacy Docker runtime (optional, deploy.resources preferred)
+
+  ui:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: gpu  # Use GPU stage for UI as well if needed
+    image: avi-gradio-ui:gpu
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    environment:
+      - DEVICE=cuda
+      - EMBEDDING_DEVICE=cuda
+      - RERANK_DEVICE=cuda
+    runtime: nvidia
+
+# Note: To use only CPU for specific services, override in your own compose file:
+# services:
+#   ui:
+#     environment:
+#       - EMBEDDING_DEVICE=cpu
+#       - RERANK_DEVICE=cpu

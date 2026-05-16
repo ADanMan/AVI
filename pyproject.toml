@@ -1,0 +1,267 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "avi"
+version = "2.0.0"
+description = "AI Validation Interface (AVI) - Production-grade platform for safe LLM deployment"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [
+    {name = "AVI Development Team"}
+]
+keywords = ["llm", "ai-safety", "content-filtering", "rag", "fastapi"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+
+# Core dependencies (from requirements/base.txt)
+dependencies = [
+    "fastapi>=0.110.0",
+    "uvicorn>=0.27.1",
+    "python-dotenv>=1.0.1",
+    "pydantic>=2.6.1",
+    "pydantic-settings>=2.2.1",
+    "pandas>=2.2.0",
+    "numpy>=1.26.3",
+    "python-multipart>=0.0.7",
+    "httpx>=0.26.0",
+    "tenacity>=8.2.3",
+    "loguru>=0.7.2",
+    "openai>=1.12.0",
+    "tiktoken>=0.8.0",
+    "aiofiles>=24.1.0",
+    "grpcio>=1.62.2",
+    "protobuf>=4.25.3",
+    "redis>=5.2.0",
+    "hvac>=2.3.0",
+    "slowapi>=0.1.9",
+]
+
+[project.optional-dependencies]
+# API extensions (rate limiting, authentication)
+api = [
+    "python-jose[cryptography]>=3.3.0",
+    "passlib[bcrypt]>=1.7.4",
+]
+
+# Vector database backends
+vector-db = [
+    "chromadb>=0.4.22",
+    "qdrant-client>=1.7.3",
+]
+
+# Machine Learning - CPU only (lightweight, ~200MB)
+ml-cpu = [
+    "torch>=2.4.0,<3.0; platform_machine != 'aarch64'",  # CPU wheel from PyTorch index
+    "sentence-transformers>=2.5.1",
+    "scikit-learn>=1.3.0",
+    "scipy>=1.11.0",
+]
+
+# Machine Learning - GPU (CUDA, ~3.5GB)
+ml-gpu = [
+    "torch>=2.4.0,<3.0",  # CUDA wheel from PyTorch index
+    "sentence-transformers>=2.5.1",
+    "scikit-learn>=1.3.0",
+    "scipy>=1.11.0",
+]
+
+# Monitoring and observability
+monitoring = [
+    "prometheus-client>=0.20.0",
+    "mlflow>=2.17.1",
+    "wandb>=0.17.9",
+    "opentelemetry-api>=1.20.0",
+    "opentelemetry-sdk>=1.20.0",
+    "opentelemetry-exporter-otlp>=1.20.0",
+    "opentelemetry-exporter-jaeger>=1.20.0",
+    "opentelemetry-instrumentation-fastapi>=0.41b0",
+    "opentelemetry-instrumentation-asgi>=0.41b0",
+]
+
+# Research and experimentation
+research = [
+    "torch>=2.4.0,<3.0",
+    "transformers>=4.44.0,<5.0",
+    "datasets>=2.21.0",
+    "evaluate>=0.4.2",
+    "matplotlib>=3.9.0",
+    "seaborn>=0.13.0",
+    "jupyter>=1.1.0",
+    "ipykernel>=6.29.0",
+    "papermill>=2.4.0",  # For automated notebook execution via CLI
+    "nltk>=3.9.0",
+    "rouge-score>=0.1.2",
+    "bert-score>=0.3.13",
+    "sacrebleu>=2.4.0",
+    "detoxify>=0.5.0",
+]
+
+# Testing framework
+test = [
+    "pytest>=8.3.4",
+    "pytest-asyncio>=0.25.3",
+    "pytest-cov>=6.0.0",
+    "tqdm>=4.66.5",
+]
+
+# Development tools (linters, formatters, type checkers)
+dev = [
+    "black>=24.10.0",
+    "ruff>=0.6.8",
+    "mypy>=1.11.2",
+    "pre-commit>=4.0.1",
+    "grpcio-tools>=1.62.2",
+]
+
+# All dependencies for local development
+all = [
+    "avi[api]",
+    "avi[vector-db]",
+    "avi[ml-cpu]",
+    "avi[monitoring]",
+    "avi[research]",
+    "avi[test]",
+    "avi[dev]",
+]
+
+[project.scripts]
+avi = "avi.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/ADanMan/AVI"
+Documentation = "https://github.com/ADanMan/AVI/blob/main/docs/ARCHITECTURE.md"
+Repository = "https://github.com/ADanMan/AVI"
+"Bug Tracker" = "https://github.com/ADanMan/AVI/issues"
+
+[tool.setuptools]
+packages = ["avi", "src", "config"]
+
+[tool.setuptools.package-data]
+"*" = ["*.yaml", "*.yml", "*.json", "*.txt"]
+
+[tool.black]
+line-length = 100
+target-version = ["py310"]
+include = "(src|tests)/.*\\.pyi?$"
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "S", "W", "N", "A", "C4", "PIE", "TID", "Q", "RUF"]
+ignore = [
+    "E501",  # Line too long (handled by black)
+    "E701",  # Multiple statements on one line
+    "B904",  # Raise without from inside except
+    "B008",  # Function call in argument default
+    "S104",  # Hardcoded bind all interfaces (0.0.0.0)
+    "S110",  # Try-except-pass detected
+    "N802",  # Function name should be lowercase
+    "N818",  # Exception name should end in Error
+    "A002",  # Argument shadows builtin
+    "RUF001",  # Ambiguous unicode (Cyrillic in Russian UI is intentional)
+    "RUF002",  # Ambiguous unicode in docstrings (Russian docstrings are intentional)
+    "RUF003",  # Ambiguous unicode in comments (Russian comments are intentional)
+    "RUF012",  # Mutable class attributes (used intentionally)
+    "F821",  # Undefined name (handled by mypy)
+]
+
+[tool.ruff.lint.isort]
+force-single-line = false
+force-sort-within-sections = false
+lines-after-imports = 2
+known-first-party = ["src", "tests", "main", "config", "avi", "safety_service"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["S101", "E402", "B017", "N806", "I001"]  # Allow assert, late imports, broad exceptions, PascalCase class refs, import order (sys.path split blocks)
+"scripts/**/*.py" = ["S101", "E402", "I001"]  # Allow assert, late imports, unsorted imports (sys.path manipulation)
+"src/**/*.py" = ["S101", "I001"]  # Allow assert; I001 cycles with black blank-line handling
+"avi/**/*.py" = ["I001"]  # I001 cycles with black blank-line handling
+"*.py" = ["I001"]  # Root-level files: I001 cycles with black
+"notebooks/**/*.py" = ["E402"]  # Allow late imports in notebooks
+"**/grpc/*.py" = ["N"]  # Allow naming in generated protobuf code
+"**/test_*.py" = ["B017"]  # Allow broad exceptions in all test files
+
+[tool.mypy]
+python_version = "3.10"
+files = ["src", "tests"]
+namespace_packages = true
+explicit_package_bases = true
+ignore_missing_imports = true
+warn_unused_configs = true
+
+[[tool.mypy.overrides]]
+module = [
+    "src.core.llm_service",
+    "src.core.rag_system",
+    "src.core.content_filter",
+    "src.core.streaming_guard",
+    "src.core.cache_system",
+    "src.services.llm_adapter",
+    "src.services.vector_db",
+    "src.services.rag_service",
+    "src.services.links_manager",
+    "src.services.indexing_service",
+    "src.services.filter_service",
+    "src.services.safety_client",
+    "src.api.routes",
+    "src.api.settings_routes",
+    "src.api.rate_limit",
+    "src.monitoring.*",
+    "src.utils.*",
+    "tests.*",
+    "scripts.*",
+    "safety_service.*",
+    "avi.*",
+    "gradio_ui",
+    "main",
+]
+ignore_errors = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+asyncio_mode = "auto"
+markers = [
+    "smoke: Minimal set of high-signal tests for quick validation.",
+]
+
+[tool.coverage.run]
+source = ["src"]
+omit = [
+    "*/tests/*",
+    "*/test_*.py",
+    "*/__pycache__/*",
+    "*/venv/*",
+    "*/.venv/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "@abstractmethod",
+]
+show_missing = true
+precision = 2
+
+[tool.coverage.xml]
+output = "coverage.xml"

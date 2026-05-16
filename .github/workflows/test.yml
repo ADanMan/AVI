@@ -1,0 +1,111 @@
+name: Tests
+
+on:
+  push:
+    branches: [ main, develop, claude/** ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+    name: Unit Tests (Python ${{ matrix.python-version }})
+
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.10', '3.11', '3.12']
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip setuptools wheel
+          pip install -r requirements.txt
+          pip install -e ".[dev,test]"
+
+      - name: Run unit tests with coverage
+        env:
+          PYTHONPATH: .
+          AVI_TEST_MODE: "1"
+          REQUIRE_API_KEY: "false"
+        run: |
+          pytest tests/ -v --cov=src --cov-report=xml --cov-report=term-missing \
+            --ignore=tests/e2e --ignore=tests/performance
+
+      - name: Upload coverage to Codecov
+        if: matrix.python-version == '3.11'
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage.xml
+          flags: unittests
+          name: codecov-umbrella
+
+      - name: Check coverage threshold
+        if: matrix.python-version == '3.11'
+        run: |
+          coverage report --fail-under=45
+
+  integration-tests:
+    runs-on: ubuntu-latest
+    name: Integration Tests
+
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      qdrant:
+        image: qdrant/qdrant:v1.8.3
+        ports:
+          - 6333:6333
+          - 6334:6334
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip setuptools wheel
+          pip install -r requirements.txt
+          pip install -e ".[dev,test]"
+
+      - name: Wait for services
+        run: |
+          timeout 60 bash -c 'until printf "" 2>>/dev/null >>/dev/tcp/$0/$1; do sleep 1; done' localhost 6379
+          timeout 60 bash -c 'until printf "" 2>>/dev/null >>/dev/tcp/$0/$1; do sleep 1; done' localhost 6333
+
+      - name: Run integration tests
+        env:
+          PYTHONPATH: .
+          AVI_TEST_MODE: "1"
+          REQUIRE_API_KEY: "false"
+          REDIS_URL: redis://localhost:6379/0
+          QDRANT_HOST: localhost
+          QDRANT_PORT: 6333
+          VECTOR_DB_PROVIDER: qdrant
+        run: |
+          pytest tests/ -m integration -v --ignore=tests/e2e --ignore=tests/performance \
+            || { code=$?; [ $code -eq 5 ] || exit $code; }
+

@@ -1,0 +1,22 @@
+\begin{table}[H]
+\caption{Threshold Sensitivity Analysis. Performance metrics at varying similarity
+threshold values $\tau$. Shaded rows indicate recommended operating points.
+\label{tab:sensitivity}}
+\begin{tabular}{cccccc}
+\toprule
+$\boldsymbol{\tau}$ & \textbf{Compliance} & \textbf{Recall} & \textbf{Precision} & \textbf{F1} & \textbf{Latency (s)} \\
+\midrule
+0.50 & 1.000 & 1.000 & 1.000 & 1.000 & 0.04 \\
+0.55 & 1.000 & 1.000 & 1.000 & 1.000 & 0.04 \\
+0.60 & 1.000 & 1.000 & 1.000 & 1.000 & 0.04 \\
+0.65 $\star$ & 1.000 & 1.000 & 1.000 & 1.000 & 0.03 \\
+0.70 & 1.000 & 1.000 & 1.000 & 1.000 & 0.03 \\
+0.75 & 1.000 & 1.000 & 1.000 & 1.000 & 0.03 \\
+0.80 & 1.000 & 1.000 & 1.000 & 1.000 & 0.03 \\
+0.85 & 1.000 & 1.000 & 1.000 & 1.000 & 0.03 \\
+0.90 & 1.000 & 1.000 & 1.000 & 1.000 & 0.03 \\
+\midrule
+\multicolumn{6}{l}{\small $\star$ Recommended operating points (zero-tolerance: $\tau=0.65$; soft guidelines: $\tau=0.82$)} \\
+\bottomrule
+\end{tabular}
+\end{table}
