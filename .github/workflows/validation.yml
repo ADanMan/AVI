@@ -1,0 +1,103 @@
+name: Validation Pipeline
+
+on:
+  push:
+    branches: [ main, develop, claude/** ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    name: Run Validation Pipeline
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install validation dependencies
+        run: |
+          pip install --upgrade pip
+          pip install pyyaml
+
+      - name: Run validation pipeline
+        id: validate
+        continue-on-error: true
+        run: |
+          python validate.py --format json markdown
+          echo "exit_code=$?" >> $GITHUB_OUTPUT
+
+      - name: Upload validation reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: validation-reports
+          path: validation_pipeline/reports/output/
+          retention-days: 30
+
+      - name: Comment PR with validation results
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+
+            // Read validation report
+            let report = '';
+            try {
+              const jsonReport = JSON.parse(
+                fs.readFileSync('validation_pipeline/reports/output/validation_report.json', 'utf8')
+              );
+
+              const summary = jsonReport.summary;
+              const status = summary.all_passed ? '✅ PASSED' : '❌ FAILED';
+
+              report = `## Validation Pipeline Report ${status}\n\n`;
+              report += `**Summary:**\n`;
+              report += `- Total issues: ${summary.total_issues}\n`;
+              report += `- 🔴 High severity: ${summary.high_severity}\n`;
+              report += `- 🟡 Medium severity: ${summary.medium_severity}\n`;
+              report += `- ⚪ Low severity: ${summary.low_severity}\n\n`;
+
+              if (summary.high_severity > 0) {
+                report += `**⚠️ Action Required:** Fix ${summary.high_severity} high severity issues before merging.\n\n`;
+              }
+
+              // Add validator summaries
+              for (const [validator, results] of Object.entries(jsonReport.validators)) {
+                const validatorStatus = results.passed ? '✅' : '❌';
+                report += `### ${validatorStatus} ${validator.replace('_', ' ').toUpperCase()}\n`;
+                report += `- Issues: ${results.total_issues} `;
+                report += `(🔴 ${results.high_severity} | 🟡 ${results.medium_severity} | ⚪ ${results.low_severity})\n\n`;
+              }
+
+              report += `\n📄 Full reports available in workflow artifacts.`;
+
+            } catch (error) {
+              report = `## Validation Pipeline Report ❌\n\nFailed to read validation report: ${error.message}`;
+            }
+
+            // Post comment
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: report
+            });
+
+      - name: Check validation status
+        if: steps.validate.outputs.exit_code != '0'
+        run: |
+          echo "::error::Validation pipeline found critical issues (high severity)"
+          exit 1
+
+      - name: Post success summary
+        if: success()
+        run: |
+          echo "::notice::✅ Validation pipeline passed successfully"

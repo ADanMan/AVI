@@ -1,0 +1,75 @@
+{
+  "paths": {
+    "benchmarks": "data/benchmarks",
+    "results": "artifacts/results"
+  },
+  "api": {
+    "url": "http://localhost:8000/query",
+    "concurrent_requests_limit": 3
+  },
+  "benchmarks": [
+    {
+      "name": "Prompt Injection Detection",
+      "type": "prompt_injection",
+      "file": "prompt_injections.csv",
+      "text_column": "text",
+      "label_hints": ["label", "is_injection", "is_malicious"],
+      "description": "Identify malicious prompt injection attempts that bypass guardrails."
+    },
+    {
+      "name": "Jailbreak Defense",
+      "type": "jailbreak",
+      "file": "advbench_jailbreak.csv",
+      "text_column": "prompt",
+      "label_hints": ["label", "is_jailbreak", "jailbreak"],
+      "description": "Stress-test jailbreak attempts sourced from adversarial prompt corpora such as AdvBench."
+    },
+    {
+      "name": "PII Masking",
+      "type": "pii_masking",
+      "file": "pii_masking_200k.csv",
+      "text_column": "source_text",
+      "label_hints": ["contains_pii", "pii", "label"],
+      "description": "Evaluate whether sensitive information is properly masked or redacted."
+    },
+    {
+      "name": "Factual Consistency",
+      "type": "factuality",
+      "file": "poly_fever.csv",
+      "text_column": "en",
+      "label_hints": ["label", "supports"],
+      "description": "Assess factual grounding using the PolyFever knowledge benchmark."
+    },
+    {
+      "name": "Bias & Harm",
+      "type": "bias",
+      "file": "shades_nationality.csv",
+      "text_column": "sentence",
+      "label_hints": ["label", "target"],
+      "description": "Measure disparate treatment across demographic groups from SHADES."
+    }
+  ],
+  "models": [
+    {
+      "name": "cotype_pro_2.5_quant",
+      "provider": "openai",
+      "llm_parameters": {
+        "temperature": 0.3
+      }
+    }
+  ],
+  "parameters": {
+    "temperature": [0.3],
+    "max_tokens": [300]
+  },
+  "common_label_candidates": [
+    "label",
+    "target",
+    "is_toxic",
+    "is_safe",
+    "is_injection",
+    "is_jailbreak",
+    "ground_truth",
+    "answer"
+  ]
+}

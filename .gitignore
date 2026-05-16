@@ -1,0 +1,90 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+pip-wheel-metadata/
+.idea/
+.vscode/
+
+# Build artifacts
+*.egg-info/
+build/
+dist/
+*.egg
+
+# Data and Logs - НЕ загружать данные в репозиторий!
+data/
+# Exception: config files should be in git
+!data/configs/
+!data/raw/
+!data/benchmarks/
+logs/
+tests/results/
+mlruns/
+
+# Environment variables - SECURITY CRITICAL
+.env
+.env.*
+!.env.example
+*.secret
+*.key
+*.pem
+*.crt
+credentials.json
+secrets.yaml
+secrets.yml
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+
+# macOS
+.DS_Store
+
+# Python cache directories
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Local helper artifacts
+run.txt
+tree.txt
+.coverage
+coverage.xml
+htmlcov/
+.coverage.*
+
+# Validation pipeline reports
+validation_pipeline/reports/output/
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+*~
+.*.swp
+.*.swo
+
+# OS-specific
+Thumbs.db
+desktop.ini
+
+# Docker volumes data (if accidentally created locally)
+.docker/
+docker-volumes/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Database files (if created locally)
+*.db
+*.sqlite
+*.sqlite3
+!tests/**/*.db
+!tests/**/*.sqlite

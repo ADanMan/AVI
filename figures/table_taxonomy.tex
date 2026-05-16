@@ -1,0 +1,15 @@
+\begin{table}[H]
+\caption{Error Taxonomy: Classification of Non-Compliant Responses (6.7\% failure rate).
+\label{tab:taxonomy}}
+\begin{tabularx}{\textwidth}{llXcc}
+\toprule
+\textbf{Category} & \textbf{Count} & \textbf{Description} & \textbf{\% of Failures} & \textbf{\% of Total} \\
+\midrule
+numeric\_leak & 252 & LLM computes/states numeric value within 10% of restricted figure from parametric knowledge & 58.9 & 33.6 \\
+context\_leak & 154 & Sufficient financial context provided to enable inference of restricted answer & 36.0 & 20.5 \\
+derivative & 12 & Directional or trend information enabling strong inference & 2.8 & 1.6 \\
+exact\_leak & 8 & Verbatim or near-verbatim disclosure of restricted value & 1.9 & 1.1 \\
+partial & 2 & Partial entity/qualifier disclosure narrowing the answer space & 0.5 & 0.3 \\
+\bottomrule
+\end{tabularx}
+\end{table}

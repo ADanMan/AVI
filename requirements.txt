@@ -1,0 +1,57 @@
+# AVI - Core dependencies for production runtime
+# Install with: pip install -r requirements.txt
+
+# Web Framework
+fastapi==0.110.0
+uvicorn==0.27.1
+python-multipart==0.0.9
+
+# Configuration
+python-dotenv==1.0.1
+pydantic==2.6.1
+pydantic-settings==2.2.1
+
+# Data Processing
+pandas==2.2.0
+numpy==1.26.3
+
+# LLM Integration
+openai==1.12.0
+tiktoken==0.8.0
+httpx==0.26.0
+tenacity==8.2.3
+
+# Vector Databases
+chromadb==0.4.22
+qdrant-client==1.7.3
+
+# Machine Learning (CPU version for smaller image)
+--find-links https://download.pytorch.org/whl/cpu/torch_stable.html
+torch>=2.4.0,<3.0
+sentence-transformers>=2.5.1
+
+# Caching
+redis==5.2.0
+
+# Monitoring
+prometheus-client==0.20.0
+opentelemetry-api==1.24.0
+opentelemetry-sdk==1.24.0
+opentelemetry-instrumentation-fastapi==0.45b0
+opentelemetry-exporter-otlp-proto-http==1.24.0
+
+# UI
+gradio==4.44.1
+
+# Utilities
+loguru==0.7.2
+aiofiles==23.2.1
+tqdm>=4.66.5
+
+# Data loading (for benchmarks)
+datasets>=2.21.0,<3.0
+pyarrow>=4.0.0,<18
+
+# gRPC (required by vector DBs)
+grpcio==1.62.2
+protobuf==4.25.3
