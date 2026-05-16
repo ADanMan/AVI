@@ -90,7 +90,7 @@ jobs:
 
       - name: Docker metadata (API)
         id: meta-api
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: |
             ${{ env.REGISTRY }}/${{ steps.image-namespace.outputs.owner }}/avi-api
@@ -110,7 +110,7 @@ jobs:
 
       - name: Docker metadata (Safety Service)
         id: meta-safety
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: |
             ${{ env.REGISTRY }}/${{ steps.image-namespace.outputs.owner }}/avi-safety-service
