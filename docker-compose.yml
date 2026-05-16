@@ -1,0 +1,252 @@
+version: "3.9"
+
+services:
+  # Gradio Chat UI
+  gradio-ui:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: cpu
+    image: avi-gradio-ui:cpu
+    container_name: avi_gradio_ui
+    env_file:
+      - .env
+    depends_on:
+      api:
+        condition: service_started
+    environment:
+      AVI_API_URL: http://api:8000
+      AVI_API_KEY: ${AVI_API_KEY:-}
+      PYTHONPATH: /app
+    volumes:
+      - ./gradio_ui.py:/app/gradio_ui.py:ro
+    ports:
+      - "7860:7860"
+    command: ["python", "gradio_ui.py"]
+
+  # API service (CPU)
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: cpu
+    image: avi-api:cpu
+    container_name: avi_api
+    env_file:
+      - .env
+    depends_on:
+      qdrant:
+        condition: service_started
+      # Optional: Uncomment if using built-in safety service
+      # safety-service:
+      #   condition: service_started
+      redis:
+        condition: service_healthy
+      mlflow:
+        condition: service_started
+    environment:
+      APP_ENV: production
+      ENVIRONMENT: production
+      DEVICE: cpu  # CPU-only inference
+      PROMETHEUS_ENABLED: "true"
+      ENABLE_MLFLOW: "true"
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      MLFLOW_EXPERIMENT_NAME: "${MLFLOW_EXPERIMENT_NAME:-AVI Benchmarks}"
+      SAFETY_MODE: disabled  # Change to 'local' if using safety-service
+      # SAFETY_SERVICE_URL: http://safety-service:8001  # Uncomment if using safety-service
+      # SAFETY_SERVICE_TIMEOUT: "5.0"
+      QDRANT_HOST: qdrant
+      QDRANT_PORT: "6333"
+      VECTOR_DB_PROVIDER: qdrant
+      QDRANT_PATH: /app/data/indexes/qdrant
+      CACHE_BACKEND: redis
+      DATA_DIR: /app/data
+      RAW_DATA_DIR: /app/data/raw
+      PROCESSED_DATA_DIR: /app/data/processed
+      INDEXES_DIR: /app/data/indexes
+      FEEDBACK_DIR: /app/data/feedback
+      REDIS_URL: redis://redis:6379/0
+      OTEL_ENABLED: "true"
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
+      OTEL_EXPORTER_JAEGER_HOST: jaeger
+      OTEL_EXPORTER_JAEGER_PORT: "6831"
+      PYTHONPATH: /app
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    ports:
+      - "8000:8000"
+    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+
+  # API service (GPU) - Use with: docker compose --profile gpu up
+  api-gpu:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: gpu
+    image: avi-api:gpu
+    container_name: avi_api_gpu
+    env_file:
+      - .env
+    profiles:
+      - gpu
+    depends_on:
+      qdrant:
+        condition: service_started
+      redis:
+        condition: service_healthy
+      mlflow:
+        condition: service_started
+    environment:
+      APP_ENV: production
+      ENVIRONMENT: production
+      DEVICE: cuda
+      PROMETHEUS_ENABLED: "true"
+      ENABLE_MLFLOW: "true"
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      MLFLOW_EXPERIMENT_NAME: "${MLFLOW_EXPERIMENT_NAME:-AVI Benchmarks}"
+      SAFETY_MODE: disabled
+      QDRANT_HOST: qdrant
+      QDRANT_PORT: "6333"
+      VECTOR_DB_PROVIDER: qdrant
+      QDRANT_PATH: /app/data/indexes/qdrant
+      CACHE_BACKEND: redis
+      DATA_DIR: /app/data
+      RAW_DATA_DIR: /app/data/raw
+      PROCESSED_DATA_DIR: /app/data/processed
+      INDEXES_DIR: /app/data/indexes
+      FEEDBACK_DIR: /app/data/feedback
+      REDIS_URL: redis://redis:6379/0
+      OTEL_ENABLED: "true"
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
+      OTEL_EXPORTER_JAEGER_HOST: jaeger
+      OTEL_EXPORTER_JAEGER_PORT: "6831"
+      PYTHONPATH: /app
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    ports:
+      - "8000:8000"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+
+  # Optional Safety Service (regex-based, disabled by default)
+  # Uncomment this section if you want to use the built-in regex safety service
+  # or implement your own safety model plugin
+  #
+  # To enable:
+  # 1. Uncomment this safety-service section
+  # 2. Uncomment safety-service dependency in api/api-gpu services above
+  # 3. Set SAFETY_MODE=local in api environment
+  # 4. Uncomment SAFETY_SERVICE_URL in api environment
+  #
+  # safety-service:
+  #   build:
+  #     context: .
+  #     dockerfile: safety_service/Dockerfile
+  #   image: avi-safety-service:latest
+  #   container_name: avi_safety_service
+  #   environment:
+  #     SAFETY_SERVICE_HOST: 0.0.0.0
+  #     SAFETY_SERVICE_PORT: "8001"
+  #     SAFETY_SERVICE_GRPC_ENABLED: "true"
+  #     SAFETY_SERVICE_GRPC_PORT: "50051"
+  #   ports:
+  #     - "8001:8001"
+  #     - "50051:50051"
+
+  qdrant:
+    image: qdrant/qdrant:v1.8.3
+    container_name: avi_qdrant
+    volumes:
+      - ./data/indexes/qdrant:/qdrant/storage
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:6333/healthz || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  redis:
+    image: redis:7-alpine
+    container_name: avi_redis
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - ./data/redis:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v2.12.1
+    container_name: avi_mlflow
+    environment:
+      MLFLOW_BACKEND_STORE_URI: sqlite:////mlflow/mlflow.db
+      MLFLOW_DEFAULT_ARTIFACT_ROOT: /mlflow/artifacts
+    command:
+      - mlflow
+      - server
+      - --backend-store-uri
+      - sqlite:////mlflow/mlflow.db
+      - --default-artifact-root
+      - /mlflow/artifacts
+      - --host
+      - 0.0.0.0
+      - --port
+      - "5000"
+    volumes:
+      - ./data/mlruns:/mlflow
+    ports:
+      - "5000:5000"
+
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    container_name: avi_prometheus
+    depends_on:
+      - api
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9091:9090"
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.57
+    container_name: avi_jaeger
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+    ports:
+      - "16686:16686"  # Jaeger UI
+      - "14268:14268"  # Jaeger HTTP collector
+      - "4318:4318"    # OTLP HTTP receiver
+      - "6831:6831/udp"  # Jaeger UDP receiver
+
+  grafana:
+    image: grafana/grafana:10.4.5
+    container_name: avi_grafana
+    depends_on:
+      - prometheus
+      - jaeger
+    environment:
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports:
+      - "3005:3000"
+
+volumes: {}

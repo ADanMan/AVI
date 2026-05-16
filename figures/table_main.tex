@@ -1,0 +1,25 @@
+\begin{table}[H]
+\caption{Performance Metrics on Public Financial Benchmark (FinanceBench, $N=150$).
+Results are reported as mean (95\% CI) across $N=5$ independent evaluation runs.
+\label{tab:performance_extended}}
+\begin{tabularx}{\textwidth}{Xll}
+\toprule
+\textbf{Metric} & \textbf{AVI (Governed)} & \textbf{Baseline (Unfiltered)} \\
+\midrule
+\multicolumn{3}{l}{\textit{Compliance \& Safety}} \\
+\quad Compliance Rate (automatic) & 51.5\% (50.1--52.8) & 50.7\% (50.7--50.7) \\
+\quad Compliance Rate (LLM-Judge) & 42.9\% (40.5--45.3) & --- \\
+\quad Recall (Violation Detection) & 100.0\% (100.0--100.0) & 0.0\% (n/a) \\
+\quad Precision & 100.0\% (100.0--100.0) & --- \\
+\quad F1 Score & 100.0\% (100.0--100.0) & --- \\
+\midrule
+\multicolumn{3}{l}{\textit{Quality (LLM-Judge)}} \\
+\quad Helpfulness & 55.5\% (52.1--59.0) & --- \\
+\quad Naturalness & 77.4\% (75.7--79.2) & --- \\
+\midrule
+\multicolumn{3}{l}{\textit{Statistical Significance}} \\
+\quad Wilcoxon signed-rank & $p = 0.200$ & --- \\
+\quad Cohen's $d$ (effect size) & 0.02 & --- \\
+\bottomrule
+\end{tabularx}
+\end{table}

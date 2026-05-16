@@ -1,0 +1,78 @@
+# Preset configurations for combining external LLMs with safety adapters.
+presets:
+  - name: openai_gpt4o__local_guard
+    description: >-
+      Baseline run that evaluates OpenAI GPT-4o with the built-in local safety
+      microservice. Suitable for offline testing where external guardrails are
+      not available. Uses MLflow for experiment tracking.
+    benchmarks:
+      include: [toxicity, prompt_injection, jailbreak, pii_masking]
+    environment:
+      BENCHMARK_TRACKER: mlflow
+      MLFLOW_TRACKING_URI: http://localhost:5000
+      MAIN_LLM_MODEL: openai/gpt-4o
+      MAIN_LLM_API_BASE: https://api.openai.com/v1
+      MAIN_LLM_TEMPERATURE: 0.2
+      MAIN_LLM_MAX_TOKENS: 800
+      SAFETY_MODE: local
+      SAFETY_LOCAL_API_URL: http://localhost:9000/moderate
+      SAFETY_LOCAL_TIMEOUT: 5.0
+      SCORING_LLM_MODEL: openai/gpt-4o-mini
+      SCORING_LLM_TEMPERATURE: 0.0
+      SCORING_LLM_MAX_TOKENS: 10
+    notes:
+      - Requires the `safety_service` container from `docker-compose.yml`.
+      - Ideal for validating latency/cost baselines without external API spend.
+
+  - name: anthropic_claude__external_guard
+    description: >-
+      Runs Anthropic Claude Sonnet 3.5 as the primary LLM while delegating
+      safety filtering to OpenAI's `omni-moderation-latest` endpoint via the
+      safety LLM adapter. Tracks experiments in Weights & Biases.
+    benchmarks:
+      include: [toxicity, jailbreak, factuality, bias]
+    environment:
+      BENCHMARK_TRACKER: wandb
+      WANDB_PROJECT: avi-benchmarks
+      MAIN_LLM_MODEL: anthropic/claude-3-5-sonnet
+      MAIN_LLM_API_BASE: https://api.anthropic.com
+      MAIN_LLM_TEMPERATURE: 0.3
+      MAIN_LLM_MAX_TOKENS: 1000
+      SAFETY_MODE: external
+      SAFETY_LLM_MODEL: openai/omni-moderation-latest
+      SAFETY_LLM_API_BASE: https://api.openai.com/v1
+      SAFETY_LLM_TEMPERATURE: 0.0
+      SAFETY_LLM_MAX_TOKENS: 32
+      SCORING_LLM_MODEL: openai/gpt-4o-mini
+      SCORING_LLM_TEMPERATURE: 0.0
+    notes:
+      - Set `SAFETY_LLM_API_KEY` and `MAIN_LLM_API_KEY` before running.
+      - Use when comparing external guardrail providers.
+
+  - name: llama3_hybrid__dual_guard
+    description: >-
+      Evaluates Meta Llama 3.3 70B Instruct with hybrid safety: local
+      microservice primary, OpenRouter fallback via hybrid adapter. Captures
+      detailed latency metrics for both adapters.
+    benchmarks:
+      include: [prompt_injection, jailbreak, pii_masking, factuality]
+    environment:
+      BENCHMARK_TRACKER: mlflow
+      MLFLOW_TRACKING_URI: http://localhost:5000
+      MAIN_LLM_MODEL: meta-llama/llama-3.3-70b-instruct
+      MAIN_LLM_API_BASE: https://openrouter.ai/api/v1
+      MAIN_LLM_TEMPERATURE: 0.1
+      MAIN_LLM_MAX_TOKENS: 1200
+      SAFETY_MODE: hybrid
+      SAFETY_LOCAL_API_URL: http://localhost:9000/moderate
+      SAFETY_LOCAL_TIMEOUT: 4.0
+      SAFETY_LLM_MODEL: openrouter/nous-hermes-llama-3.1-8b
+      SAFETY_LLM_API_BASE: https://openrouter.ai/api/v1
+      SAFETY_LLM_TEMPERATURE: 0.0
+      SAFETY_LLM_MAX_TOKENS: 64
+      SCORING_LLM_MODEL: openrouter/nous-hermes-llama-3.1-8b
+      SCORING_LLM_TEMPERATURE: 0.0
+      SCORING_LLM_MAX_TOKENS: 16
+    notes:
+      - Requires both local safety service and OpenRouter credentials.
+      - Useful for hybrid-mode regression tests.

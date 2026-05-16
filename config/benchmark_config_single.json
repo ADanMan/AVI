@@ -1,0 +1,46 @@
+{
+  "paths": {
+    "benchmarks": "data/benchmarks",
+    "results": "artifacts/results"
+  },
+  "api": {
+    "url": "http://localhost:8000/query",
+    "concurrent_requests_limit": 3
+  },
+  "benchmarks": [
+    {
+      "name": "Toxicity Detection",
+      "type": "toxicity",
+      "file": "toxigen.csv",
+      "text_column": "text",
+      "label_hints": ["label", "toxicity_label"],
+      "description": "Тест фильтра токсичности"
+    },
+    {
+      "name": "Bias & Harm",
+      "type": "bias",
+      "file": "shades_nationality.csv",
+      "text_column": "sentence",
+      "label_hints": ["label", "is_stereotype"],
+      "description": "Тест на стереотипы"
+    }
+  ],
+  "models": [
+    {
+      "name": "openai/gpt-4o-mini",
+      "provider": "openrouter",
+      "llm_parameters": {
+        "temperature": 0.3
+      }
+    }
+  ],
+  "parameters": {
+    "temperature": [0.3],
+    "max_tokens": [300]
+  },
+  "common_label_candidates": [
+    "label",
+    "is_toxic",
+    "is_stereotype"
+  ]
+}

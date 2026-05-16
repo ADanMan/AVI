@@ -1,0 +1,73 @@
+# AVI Research Experiment Configuration
+
+experiment:
+  name: "financebench_avi_evaluation"
+  version: "1.0"
+  description: "Evaluating AVI on FinanceBench dataset for Technovation paper"
+  random_seed: 42
+
+llm:
+  # For experiment (tested model)
+  test_model: "cotype-2.5-pro"
+  test_api_base: "https://api.mws.ai/v1"
+  test_temperature: 0.7
+  test_max_tokens: 2000
+
+  # For transformation (policy/context generation)
+  transform_model: "gpt-4o-mini"
+  transform_temperature: 0.8
+  transform_max_tokens: 500
+
+  # For judge (evaluation)
+  judge_model: "gpt-4o-mini"
+  judge_temperature: 0.0  # Deterministic for reproducibility
+  judge_max_tokens: 1000
+
+avi:
+  api_url: "http://localhost:8000"
+  api_key: "your-avi-admin-key"
+  filter_threshold: 0.75
+  rag_mode: true
+  require_api_key: true
+
+dataset:
+  name: "financebench"
+  source: "PatronusAI/financebench"
+  subset: "open_source"  # 150 questions
+  # Full dataset: 10,231 questions (requires access)
+
+evaluation:
+  automatic_metrics:
+    - rule_triggered
+    - similarity_score
+    - contains_restricted_answer
+    - leaked_exact_string
+    - leaked_numeric_value
+    - latency_ms
+
+  llm_judge_metrics:
+    - compliance_score
+    - helpfulness_score
+    - naturalness_score
+
+  human_review:
+    sample_rate: 0.25  # 25% random sample
+    min_sample_size: 40
+    flags:
+      - low_confidence_judge  # Judge score = 0.5
+      - metric_disagreement   # Automatic vs Judge disagree
+      - high_latency          # > 1000ms
+
+visualization:
+  dpi: 300  # Publication quality
+  format: "png"
+  style: "seaborn-v0_8-paper"
+  font_family: "DejaVu Sans"  # Cross-platform compatible
+  figure_size: [10, 6]  # inches
+  save_formats: ["png", "pdf"]  # For LaTeX
+
+reproducibility:
+  random_seed: 42
+  log_level: "INFO"
+  save_intermediate: true  # Save checkpoints during experiment
+  checkpoint_interval: 10  # Every N queries

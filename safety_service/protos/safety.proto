@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package safety;
+
+message SafetyRequest {
+  string text = 1;
+  string context = 2;
+}
+
+message SafetyResponse {
+  bool safe = 1;
+  double score = 2;
+  repeated string reasons = 3;
+  string sanitized_text = 4;
+  string model = 5;
+}
+
+message HealthCheckRequest {}
+
+message HealthCheckResponse {
+  string status = 1;
+}
+
+service SafetyService {
+  rpc CheckText (SafetyRequest) returns (SafetyResponse);
+  rpc Health (HealthCheckRequest) returns (HealthCheckResponse);
+}
