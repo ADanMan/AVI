@@ -3,7 +3,7 @@
 
 # Jupyter
 jupyter>=1.0.0
-jupyterlab>=4.0.0
+jupyterlab>=4.5.7
 
 # Visualization
 matplotlib>=3.7.0
