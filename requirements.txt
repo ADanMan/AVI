@@ -50,7 +50,7 @@ tqdm>=4.66.5
 
 # Data loading (for benchmarks)
 datasets>=2.21.0,<3.0
-pyarrow>=4.0.0,<18
+pyarrow>=24.0.0,<25
 
 # gRPC (required by vector DBs)
 grpcio==1.62.2
