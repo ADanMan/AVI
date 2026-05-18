@@ -18,7 +18,7 @@ numpy==1.26.3
 # LLM Integration
 openai==1.12.0
 tiktoken==0.8.0
-httpx==0.26.0
+httpx==0.28.1
 tenacity==8.2.3
 
 # Vector Databases
