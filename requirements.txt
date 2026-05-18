@@ -13,7 +13,7 @@ pydantic-settings==2.2.1
 
 # Data Processing
 pandas==2.2.0
-numpy==1.26.3
+numpy==2.2.6
 
 # LLM Integration
 openai==1.12.0
