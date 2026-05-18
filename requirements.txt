@@ -53,5 +53,5 @@ datasets>=2.21.0,<3.0
 pyarrow>=4.0.0,<18
 
 # gRPC (required by vector DBs)
-grpcio==1.62.2
+grpcio==1.80.0
 protobuf==4.25.3
