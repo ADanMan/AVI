@@ -2,7 +2,7 @@
 # Install with: pip install -r requirements.txt
 
 # Web Framework
-fastapi==0.110.0
+fastapi==0.136.1
 uvicorn==0.27.1
 python-multipart==0.0.9
 
