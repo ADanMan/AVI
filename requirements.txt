@@ -23,7 +23,7 @@ tenacity==8.2.3
 
 # Vector Databases
 chromadb==0.4.22
-qdrant-client==1.7.3
+qdrant-client==1.18.0
 
 # Machine Learning (CPU version for smaller image)
 --find-links https://download.pytorch.org/whl/cpu/torch_stable.html
