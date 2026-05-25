@@ -54,4 +54,4 @@ pyarrow>=4.0.0,<18
 
 # gRPC (required by vector DBs)
 grpcio==1.62.2
-protobuf==4.25.3
+protobuf==7.35.0
